@@ -38,7 +38,7 @@
   import { GLOBAL_HEART_STOCK_MARKET } from './heartstockmarket.svelte';
   import * as d3 from 'd3';
   import type { ChatClient } from '@twurple/chat';
-  import { makeApplication } from './utils';
+  import { makeApplication, properRandom } from './utils';
   import { MaxwellContainer } from './maxwell';
   import { KarmaContainer } from './karma';
   import { ModelUpdater } from './modelupdater';
@@ -76,6 +76,18 @@
   const checkInStore = createCheckInStore(ws);
   const makiStore = createMakiStore(ws);
 
+  function randomPopupPosition(targetWidth, targetHeight) {
+    const style = getComputedStyle(chatBulletContainer);
+    const { width, height } = style;
+    const fullWidthNo = Number(width.replace('px', ''));
+    const fullHeightNo = Number(height.replace('px', ''));
+    let p = {
+      left: properRandom() * (fullWidthNo - targetWidth),
+      top: properRandom() * (fullHeightNo - targetHeight)
+    }; 
+    return p;
+  }
+
   function onShowImageLoad(event: Event) {
     // once the iMage loads, reposition and rescale it immediately
     const target = event.target;
@@ -83,23 +95,16 @@
       return;
 
     const imgTarget = target as HTMLImageElement;
-    const style = getComputedStyle(chatBulletContainer);
-
-    const { width, height } = style;
-
-    const fullWidthNo = Number(width.replace('px', ''));
-    const fullHeightNo = Number(height.replace('px', ''));
 
     const { naturalWidth, naturalHeight } = imgTarget;
     const targetWidth = Math.max(Math.random(), 0.5) * Math.min(Math.max(naturalWidth, 80), 500);
     const targetHeight = (naturalHeight / naturalWidth) * targetWidth;
 
-    const randoms = new Uint8Array(2);
-    crypto.getRandomValues(randoms);
-    imgTarget.style.left = `${(randoms[0] / 255.0) * (fullWidthNo - targetWidth)}px`;
-    imgTarget.style.top = `${(randoms[1] / 255.0) * (fullHeightNo - targetWidth)}px`;
+    const randpos = randomPopupPosition(targetWidth, targetHeight);
     imgTarget.style.width = `${targetWidth}px`;
     imgTarget.style.height = `${targetHeight}px`;
+    imgTarget.style.left = `${randpos.left}px`;
+    imgTarget.style.top = `${randpos.top}px`;
   }
 
   function buildSvgGraphFor(numbers: number[]): SVGSVGElement | null {
@@ -250,11 +255,18 @@
   function captchaLoop(dispatcher: OverlayDispatchers) {
     setTimeout(
       () => {
-        captchaTop =
-          Math.random() *
-          (1080 - Number(getComputedStyle(captchaElement).height.replace('px', '')));
-        captchaLeft =
-          Math.random() * (1920 - Number(getComputedStyle(captchaElement).width.replace('px', '')));
+        const targetWidth = Number(getComputedStyle(captchaElement).width.replace('px', ''));
+        const targetHeight = Number(getComputedStyle(captchaElement).height.replace('px', ''));
+        //HACK: bruteforce avoiding obstacles
+        let p;
+        for (let i = 0; i < 1000; i++) {
+          p = randomPopupPosition(targetWidth, targetHeight);
+          // avoid bottom right corner
+          if (p.left+targetWidth > 1400 && p.top+targetHeight > 500) {continue}
+          break
+        }
+        captchaLeft = p.left;
+        captchaTop = p.top;
 
         let captcha = new CaptchaObserver(dispatcher, () => {
           captchaText = null;
