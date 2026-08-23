@@ -1,5 +1,5 @@
 import type { OverlayDispatchers } from '../dispatcher';
-import { GLOBAL_STOCK_MARKET } from '../stock/market';
+import { GLOBAL_STOCK_MARKET, StockMarketError } from '../stock/market';
 import { getPointsForUser, setPointsForUser } from '$lib/api/points';
 import { random } from '$lib/utils';
 import { PEOPLE_WHO_CHECKED_IN, TOGGLE_EXPIRY } from '../commands/middleware';
@@ -121,7 +121,18 @@ export class GiveStockGrantItem extends GambaItem {
   }
 
   async onWin(ctx: GambaContext): Promise<void> {
-    await GLOBAL_STOCK_MARKET.grantPoints(ctx.username, this.stock, this.points);
+    try {
+      await GLOBAL_STOCK_MARKET.grantPoints(ctx.username, this.stock, this.points);
+    } catch (e) {
+      if (e instanceof StockMarketError) {
+        ctx.dispatcher.sendMessageAsUser(
+          ctx.channelId,
+          `@${ctx.username} would have won ${this.points}VD of ${this.stock}, but ${this.stock} is bankrupt!`
+        );
+        return;
+      }
+      throw e;
+    }
     ctx.dispatcher.sendMessageAsUser(
       ctx.channelId,
       `@${ctx.username} won ${this.points}VD worth of ${this.stock} from the gamba wheel!`
@@ -373,9 +384,20 @@ export class GiveEveryoneStockGrantItem extends GambaItem {
 
   async onWin(ctx: GambaContext): Promise<void> {
     const users = PEOPLE_WHO_CHECKED_IN;
-    await Promise.all(
-      users.map((u) => GLOBAL_STOCK_MARKET.grantPoints(u, this.stock, this.points))
-    );
+    try {
+      await Promise.all(
+        users.map((u) => GLOBAL_STOCK_MARKET.grantPoints(u, this.stock, this.points))
+      );
+    } catch (e) {
+      if (e instanceof StockMarketError) {
+        ctx.dispatcher.sendMessageAsUser(
+          ctx.channelId,
+          `Everyone would have gotten +${this.points}VD of ${this.stock}, but ${this.stock} is bankrupt!`
+        );
+        return;
+      }
+      throw e;
+    }
     ctx.dispatcher.sendMessageAsUser(
       ctx.channelId,
       `Everyone got +${this.points}VD of ${this.stock} from the gamba wheel!`

@@ -36,6 +36,10 @@ export class KarmaStock implements StockProvider {
     return this._current;
   }
 
+  get sourceValue(): number {
+    return karmaStore.karma;
+  }
+
   subscribe(fn: (value: number) => void) {
     fn(this._current);
     return this.pub.subscribe(fn);

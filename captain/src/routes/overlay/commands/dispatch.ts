@@ -146,9 +146,21 @@ export const COMMAND_HANDLERS: Partial<Record<ChatCommand, CommandRunner>> = {
   '%font': (commands, dispatcher, message, config) =>
     fontCommandHandler(commands, dispatcher, message, config as OverlayFontConfig),
   '%fontweight': (commands, dispatcher, message, config) =>
-    fontStyleCommandHandler(commands, dispatcher, message, config as OverlayFontStyleConfig, 'weight'),
+    fontStyleCommandHandler(
+      commands,
+      dispatcher,
+      message,
+      config as OverlayFontStyleConfig,
+      'weight'
+    ),
   '%fontitalic': (commands, dispatcher, message, config) =>
-    fontStyleCommandHandler(commands, dispatcher, message, config as OverlayFontStyleConfig, 'italic')
+    fontStyleCommandHandler(
+      commands,
+      dispatcher,
+      message,
+      config as OverlayFontStyleConfig,
+      'italic'
+    )
 };
 
 type _Expect<T extends true> = T;

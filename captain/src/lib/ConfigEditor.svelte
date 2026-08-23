@@ -313,33 +313,56 @@
                         {#each ((data[field.key] as Record<string, unknown>)[child.key] as Record<string, unknown>[] | undefined) ?? [] as item, i}
                           <div class="list-object-row">
                             {#each child.listObjectFields ?? [] as subField}
-                              <label>
-                                {subField.label}
-                                <input
-                                  type={subField.kind === 'number' ? 'number' : 'text'}
-                                  min={subField.min}
-                                  max={subField.max}
-                                  step={subField.step}
-                                  placeholder={subField.placeholder}
-                                  value={(item[subField.key] as string | number) ?? ''}
-                                  on:input={(e) => {
-                                    const parent = data[field.key] as Record<string, unknown>;
-                                    const arr = [
-                                      ...((parent[child.key] as Record<string, unknown>[]) ?? [])
-                                    ];
-                                    arr[i] = {
-                                      ...arr[i],
-                                      [subField.key]:
-                                        subField.kind === 'number'
-                                          ? parseFloat(e.currentTarget.value)
-                                          : e.currentTarget.value
-                                    };
-                                    parent[child.key] = arr;
-                                    data[field.key] = parent;
-                                    data = data;
-                                  }}
-                                />
-                              </label>
+                              {#if subField.kind === 'boolean'}
+                                <label class="bool-label">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!item[subField.key]}
+                                    on:change={(e) => {
+                                      const parent = data[field.key] as Record<string, unknown>;
+                                      const arr = [
+                                        ...((parent[child.key] as Record<string, unknown>[]) ?? [])
+                                      ];
+                                      arr[i] = {
+                                        ...arr[i],
+                                        [subField.key]: e.currentTarget.checked
+                                      };
+                                      parent[child.key] = arr;
+                                      data[field.key] = parent;
+                                      data = data;
+                                    }}
+                                  />
+                                  {subField.label}
+                                </label>
+                              {:else}
+                                <label>
+                                  {subField.label}
+                                  <input
+                                    type={subField.kind === 'number' ? 'number' : 'text'}
+                                    min={subField.min}
+                                    max={subField.max}
+                                    step={subField.step}
+                                    placeholder={subField.placeholder}
+                                    value={(item[subField.key] as string | number) ?? ''}
+                                    on:input={(e) => {
+                                      const parent = data[field.key] as Record<string, unknown>;
+                                      const arr = [
+                                        ...((parent[child.key] as Record<string, unknown>[]) ?? [])
+                                      ];
+                                      arr[i] = {
+                                        ...arr[i],
+                                        [subField.key]:
+                                          subField.kind === 'number'
+                                            ? parseFloat(e.currentTarget.value)
+                                            : e.currentTarget.value
+                                      };
+                                      parent[child.key] = arr;
+                                      data[field.key] = parent;
+                                      data = data;
+                                    }}
+                                  />
+                                </label>
+                              {/if}
                             {/each}
                             <button
                               type="button"

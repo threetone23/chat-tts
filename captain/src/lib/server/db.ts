@@ -320,6 +320,19 @@ export async function deleteHoldingById(id: number): Promise<void> {
   });
 }
 
+export async function deleteAllHoldingsForStock(stock: string): Promise<number> {
+  return new Promise((resolve, reject) => {
+    db.run('DELETE FROM stock_holdings WHERE stock = ?', [stock], function (e: Error | null) {
+      if (e) {
+        console.warn('database error', e);
+        reject(e);
+        return;
+      }
+      resolve(this.changes);
+    });
+  });
+}
+
 export async function updateHoldingPoints(id: number, newInvestedPoints: number): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run(

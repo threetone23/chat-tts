@@ -1,5 +1,6 @@
 import { getOverlayConfig } from '../constants';
 import { GLOBAL_PROVIDER_REGISTRY, type StockProvider } from './providers';
+import { GLOBAL_BANKRUPTCY_MONITOR } from './bankruptcy';
 import { createPubSub, type Unsubscribe } from '../stores/pubsub';
 
 export interface CyclerSnapshot {
@@ -9,6 +10,7 @@ export interface CyclerSnapshot {
   color?: string;
   current: number;
   history: number[];
+  bankrupt: boolean;
 }
 
 export interface CyclerStore {
@@ -28,7 +30,8 @@ export function createCyclerStore(): CyclerStore {
     symbol: 'HEART',
     label: 'Heartrate',
     current: getOverlayConfig().modelConfig.initialHeartrate,
-    history: []
+    history: [],
+    bankrupt: false
   };
 
   const pub = createPubSub<CyclerSnapshot>();
@@ -42,14 +45,7 @@ export function createCyclerStore(): CyclerStore {
     return pub.subscribe(fn);
   }
 
-  function advance() {
-    const providers = GLOBAL_PROVIDER_REGISTRY.getAll();
-    if (providers.length === 0) return;
-
-    currentIndex = (currentIndex + 1) % providers.length;
-    const provider = providers[currentIndex];
-    const value = provider.current;
-
+  function recordPoint(provider: StockProvider, value: number) {
     let h = historyMap.get(provider.symbol);
     if (!h) {
       h = [];
@@ -58,34 +54,45 @@ export function createCyclerStore(): CyclerStore {
     h.push(value);
     if (h.length > MAX_HISTORY) h.splice(0, h.length - MAX_HISTORY);
 
+    GLOBAL_BANKRUPTCY_MONITOR.processValue(provider, provider.sourceValue ?? value);
+  }
+
+  function advance() {
+    const providers = GLOBAL_PROVIDER_REGISTRY.getAll();
+    if (providers.length === 0) return;
+
+    currentIndex = (currentIndex + 1) % providers.length;
+    const provider = providers[currentIndex];
+    const value = provider.current;
+
+    recordPoint(provider, value);
+
+    const h = historyMap.get(provider.symbol)!;
     currentSnapshot = {
       symbol: provider.symbol,
       label: provider.label,
       icon: provider.icon,
       color: provider.color,
       current: value,
-      history: [...h]
+      history: [...h],
+      bankrupt: GLOBAL_BANKRUPTCY_MONITOR.isBankrupt(provider.symbol)
     };
     notify();
   }
 
   function registerProvider(provider: StockProvider) {
     provider.subscribe((value) => {
-      let h = historyMap.get(provider.symbol);
-      if (!h) {
-        h = [];
-        historyMap.set(provider.symbol, h);
-      }
-      h.push(value);
-      if (h.length > MAX_HISTORY) h.splice(0, h.length - MAX_HISTORY);
+      recordPoint(provider, value);
 
       if (currentSnapshot.symbol === provider.symbol) {
+        const h = historyMap.get(provider.symbol)!;
         currentSnapshot = {
           ...currentSnapshot,
           icon: provider.icon,
           color: provider.color,
           current: value,
-          history: [...h]
+          history: [...h],
+          bankrupt: GLOBAL_BANKRUPTCY_MONITOR.isBankrupt(provider.symbol)
         };
         notify();
       }

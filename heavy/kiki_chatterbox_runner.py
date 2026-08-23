@@ -150,7 +150,7 @@ CHATTERBOX_SUBSCRIPT_REMOTE = "/chatterbox_subscript.py"
 CHATTERBOX_CRASH_TEXT = "RuntimeError: CUDA error: device-side assert triggered"
 CHATTERBOX_STARTUP_DL = 10 * MINUTES
 
-RATING_MIN = -500.0
+RATING_MIN = -50.0
 RATING_MAX = 50.0
 
 KIKI_SCHEMA = {
@@ -177,7 +177,7 @@ SYSTEM_PROMPT = (
     "❤️, 🎤). Symbolize text/concepts with emojis where possible (e.g., 2️⃣1️⃣ for 21).\n"
     "3. **Kaomoji Bank:** Use or adapt a known Kaomoji, or choose from this list. Default is "
     "(^=\\'.'=^).\n"
-    "4. **Rating:** Rate the message from -500 to 50 based on how cute/seiso (clean/pure) the "
+    "4. **Rating:** Rate the message from -50 to 50 based on how cute/seiso (clean/pure) the "
     "comment is. Seiso comments (wholesome, innocent, adorable) should score higher karma. "
     "Lewd, weird, or mean comments should score lower. Default/neutral is 0.\n"
     "5. **Pin Decision:** Determine whether this message is pin-worthy -- i.e., notable, funny, "

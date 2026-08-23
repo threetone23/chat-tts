@@ -5,6 +5,8 @@ export interface StockProvider {
   readonly label: string;
   readonly icon?: string;
   readonly color?: string;
+  /** Raw underlying metric (e.g. karma for KRMA); defaults to `current` when absent */
+  readonly sourceValue?: number;
   subscribe(fn: (value: number) => void): Unsubscribe;
   get current(): number;
 }

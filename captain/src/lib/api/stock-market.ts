@@ -94,6 +94,21 @@ export async function apiGrantPoints(req: GrantRequest): Promise<GrantResponse> 
   return (await response.json()) as GrantResponse;
 }
 
+export interface BankruptResponse {
+  ok: boolean;
+  error?: string;
+  deleted?: number;
+}
+
+export async function apiBankruptStock(stock: string): Promise<BankruptResponse> {
+  const response = await fetch(`${BASE}?action=bankrupt`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stock })
+  });
+  return (await response.json()) as BankruptResponse;
+}
+
 export interface HoldingInfo {
   id: number;
   stock: string;

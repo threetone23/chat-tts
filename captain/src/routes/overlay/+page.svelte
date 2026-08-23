@@ -54,6 +54,8 @@
   import { KarmaStock } from './stock/karma';
   import { createAndStartCycler, type CyclerSnapshot } from './stock/cycler.svelte';
   import { DEFAULT_STOCK_ICON } from './stock/icons';
+  import { GLOBAL_BANKRUPTCY_MONITOR } from './stock/bankruptcy';
+  import { apiBankruptStock } from '$lib/api/stock-market';
   import type { ChatClient } from '@twurple/chat';
   import { makeApplication } from './utils';
   import { random } from '$lib/utils';
@@ -230,7 +232,8 @@
     symbol: 'HEART',
     label: 'Heartrate',
     current: getOverlayConfig().modelConfig.initialHeartrate,
-    history: []
+    history: [],
+    bankrupt: false
   });
 
   const busWs = new WebSocket(PUBLIC_BUS_URL);
@@ -664,7 +667,7 @@
     const cycler = createAndStartCycler();
     cycler.subscribe((snap) => {
       cyclerSnapshot = snap;
-      const graph = buildSvgGraphFor(snap.history, snap.color ?? 'red');
+      const graph = buildSvgGraphFor(snap.history, snap.color ?? 'red', snap.bankrupt);
       if (!graph) return;
       heartrateGraphParent.innerHTML = '';
       heartrateGraphParent.appendChild(graph);
@@ -694,6 +697,22 @@
     let _watchStreakTracker = new WatchStreakTracker(dispatchers, commands);
     let _newChatterGreeter = new NewChatterGreeter(dispatchers);
     let _gnkRaidGuard = new GoodnightKissRaidGuard(dispatchers);
+
+    GLOBAL_BANKRUPTCY_MONITOR.setEffects({
+      onBankruptcy: async (provider, _value, _rule) => {
+        try {
+          await apiBankruptStock(provider.symbol);
+        } catch (e) {
+          console.warn(`[bankruptcy] failed to wipe holdings for ${provider.symbol}:`, e);
+        }
+        const text = `${provider.symbol} went BANKRUPT. All ${provider.symbol} holdings wiped.`;
+        await dispatchers!.sendMessageAsUser(PUBLIC_TARGET_CHANNEL_ID, text);
+      },
+      onRecovery: (provider) => {
+        const text = `${provider.symbol} recovered from bankruptcy. Trading reopened.`;
+        void dispatchers!.sendMessageAsUser(PUBLIC_TARGET_CHANNEL_ID, text);
+      }
+    });
     twitchClient.connect();
     console.log('Twitch connected');
 
@@ -1010,7 +1029,9 @@
         {@html cyclerSnapshot.icon ?? DEFAULT_STOCK_ICON}
         <p>{cyclerSnapshot.current}</p>
       </div>
-      <span class="stockPanel-label">Stock: {cyclerSnapshot.symbol}</span>
+      <span class="stockPanel-label"
+        >Stock: {cyclerSnapshot.symbol}</span
+      >
     </div>
     <div bind:this={heartrateGraphParent} class="grey-box"></div>
   </div>
@@ -1259,6 +1280,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    align-self: flex-end;
     font-size: 72px;
   }
 

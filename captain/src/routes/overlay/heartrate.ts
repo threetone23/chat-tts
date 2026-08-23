@@ -17,7 +17,7 @@ export class Heartrate implements StockProvider {
   readonly symbol = 'HEART';
   readonly label = 'Heartrate';
   readonly icon = HEART_ICON;
-  readonly color = 'rgb(4, 187, 175)';
+  readonly color = 'red';
   private ws: ReconnectingWebSocket;
   private pub = createPubSub<number>();
   private _current: number;

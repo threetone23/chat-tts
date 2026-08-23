@@ -133,6 +133,10 @@ stockMarketConfig:
     - KRMA
   buyFailSteepness: 8
   overpayFactor: 0.1
+  bankruptcy:
+    - symbol: KRMA
+      enabled: true
+      threshold: -2500
 
 soundEffects:
   - tag: '(metalpipes)'

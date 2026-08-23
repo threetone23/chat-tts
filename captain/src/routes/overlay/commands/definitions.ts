@@ -160,6 +160,17 @@ const stockMarketConfigSection = alwaysSection('stockMarketConfig', 'Stock Marke
     default: 0.1,
     min: 0,
     step: 0.01
+  },
+  {
+    key: 'bankruptcy',
+    kind: 'list-of-objects',
+    label: 'Bankruptcy rules',
+    default: [{ symbol: 'KRMA', enabled: true, threshold: -2500 }],
+    listObjectFields: [
+      { key: 'symbol', kind: 'text', label: 'Symbol', placeholder: 'KRMA' },
+      { key: 'enabled', kind: 'boolean', label: 'Enabled', default: true },
+      { key: 'threshold', kind: 'number', label: 'Threshold', default: -2500, step: 1 }
+    ]
   }
 ]);
 

@@ -1,6 +1,10 @@
 import * as d3 from 'd3';
 
-export function buildSvgGraphFor(numbers: number[], color: string = 'red'): SVGSVGElement | null {
+export function buildSvgGraphFor(
+  numbers: number[],
+  color: string = 'red',
+  bankrupt: boolean = false
+): SVGSVGElement | null {
   const width = 928;
   const height = 500;
   const marginTop = 20;
@@ -35,6 +39,29 @@ export function buildSvgGraphFor(numbers: number[], color: string = 'red'): SVGS
     .attr('stroke', color)
     .attr('stroke-width', 10.0)
     .attr('d', line(dataset));
+
+  if (bankrupt) {
+    svg
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('rx', 8)
+      .attr('fill', 'rgba(0, 0, 0, 0.65)');
+
+    svg
+      .append('text')
+      .attr('x', width / 2)
+      .attr('y', height / 2)
+      .attr('fill', '#ff2d2d')
+      .attr('font-weight', 'bold')
+      .attr('font-size', 96)
+      .attr('font-family', 'Fredoka One, sans-serif')
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'middle')
+      .text('BANKRUPT');
+  }
 
   return svg.node();
 }

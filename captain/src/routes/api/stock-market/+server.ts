@@ -5,6 +5,7 @@ import {
   getAllHoldingsForUser,
   getHoldingsForUserAndStock,
   deleteHoldingById,
+  deleteAllHoldingsForStock,
   updateHoldingPoints,
   getMedianPointsForUsers,
   setPointsForUser,
@@ -46,8 +47,13 @@ export const POST: RequestHandler = async ({ url, request }) => {
     const totalCost = points + overpay;
     const balance = await getPointsForUser(username);
     if (balance < totalCost) {
-      console.log(`[stock-market] buy: insufficient points (balance=${balance}, needed=${totalCost})`);
-      return json({ ok: false, error: `Insufficient points (have ${balance}, need ${totalCost})` }, { status: 400 });
+      console.log(
+        `[stock-market] buy: insufficient points (balance=${balance}, needed=${totalCost})`
+      );
+      return json(
+        { ok: false, error: `Insufficient points (have ${balance}, need ${totalCost})` },
+        { status: 400 }
+      );
     }
 
     const existingHoldings = await getHoldingsForUserAndStock(username, stock);
@@ -98,7 +104,13 @@ export const POST: RequestHandler = async ({ url, request }) => {
     console.log(
       `[stock-market] buy: success user=${username} stock=${stock} invested=${points} price=${price} id=${holdingId}`
     );
-    return json({ ok: true, failChance: Math.round(failChance), invested: points, price, holdingId });
+    return json({
+      ok: true,
+      failChance: Math.round(failChance),
+      invested: points,
+      price,
+      holdingId
+    });
   }
 
   if (action === 'sell') {
@@ -206,6 +218,23 @@ export const POST: RequestHandler = async ({ url, request }) => {
       `[stock-market] grant: success user=${username} stock=${stock} invested=${points} buyPrice=${price} id=${holdingId}`
     );
     return json({ ok: true, holdingId, invested: points, buyPrice: price });
+  }
+
+  if (action === 'bankrupt') {
+    const body = (await request.json()) as { stock?: string };
+    const stock = body.stock?.trim() ?? '';
+
+    console.log(`[stock-market] bankrupt: stock=${stock}`);
+
+    if (!stock) {
+      console.log('[stock-market] bankrupt: invalid request params');
+      return json({ ok: false, error: 'invalid request' }, { status: 400 });
+    }
+
+    const deleted = await deleteAllHoldingsForStock(stock);
+
+    console.log(`[stock-market] bankrupt: wiped ${deleted} holdings for ${stock}`);
+    return json({ ok: true, deleted });
   }
 
   console.log(`[stock-market] unknown action: ${action}`);

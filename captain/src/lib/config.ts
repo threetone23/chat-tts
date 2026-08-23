@@ -182,6 +182,12 @@ export interface OverlayVoiceConfig {}
 
 export interface OverlayRestartConfig {}
 
+export interface StockBankruptcyRule {
+  symbol: string;
+  enabled: boolean;
+  threshold: number;
+}
+
 export interface OverlayStockMarketConfig {
   cycleIntervalMs: number;
   checkinGrantPoints: number;
@@ -189,6 +195,7 @@ export interface OverlayStockMarketConfig {
   approvedStocks: string[];
   buyFailSteepness: number;
   overpayFactor: number;
+  bankruptcy: StockBankruptcyRule[];
 }
 
 export interface OverlayCommandCooldownsConfig {

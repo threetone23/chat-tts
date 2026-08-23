@@ -1,6 +1,7 @@
 import { getOverlayConfig } from '../constants';
 import { PEOPLE_WHO_CHECKED_IN } from '../commands/middleware';
 import { GLOBAL_PROVIDER_REGISTRY } from './providers';
+import { GLOBAL_BANKRUPTCY_MONITOR } from './bankruptcy';
 import {
   apiBuy,
   apiSell,
@@ -75,6 +76,10 @@ export class StockMarket {
       throw new StockMarketError(`Unknown stock: ${stock}`);
     }
 
+    if (GLOBAL_BANKRUPTCY_MONITOR.isBankrupt(stock)) {
+      throw new StockMarketError(`${stock} is bankrupt`);
+    }
+
     const price = currentPriceOrThrow(stock);
     const cfg = getOverlayConfig().stockMarketConfig;
 
@@ -101,7 +106,7 @@ export class StockMarket {
   async buyAll(user: string, stock: string, skipChance = false): Promise<BuyResponse> {
     const points = (await getPointsForUser(user)) ?? 0;
     if (points <= 0) {
-      return { ok: false, error: 'No points to invest' };
+      return { ok: false, failChance: 0, error: 'No points to invest' };
     }
     return this.buy(user, stock, points, skipChance);
   }
@@ -197,6 +202,10 @@ export class StockMarket {
   }
 
   async grantPoints(user: string, stock: string, points: number): Promise<GrantResponse> {
+    if (GLOBAL_BANKRUPTCY_MONITOR.isBankrupt(stock)) {
+      throw new StockMarketError(`${stock} is bankrupt`);
+    }
+
     const price = currentPriceOrThrow(stock);
 
     console.log(
@@ -216,6 +225,7 @@ export class StockMarket {
   async checkin(user: string): Promise<void> {
     const cfg = getOverlayConfig().stockMarketConfig;
     for (const stock of this.approvedStocks()) {
+      if (GLOBAL_BANKRUPTCY_MONITOR.isBankrupt(stock)) continue;
       await this.grantPoints(user, stock, cfg.checkinGrantPoints);
     }
     this.notify();
