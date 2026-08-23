@@ -20,6 +20,8 @@ if (playlistUrl) {
       playlistUrl
     })
   );
+} else {
+  console.warn('songs: YOUTUBE_PLAYLIST_URL not set, YouTube playlist provider disabled');
 }
 
 export function getSongProviders(): SongProvider[] {

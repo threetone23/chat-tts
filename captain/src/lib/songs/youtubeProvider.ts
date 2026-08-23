@@ -42,7 +42,11 @@ export class YouTubeSongProvider implements SongProvider {
     });
 
     const results = (await Promise.all(checks)).filter((p): p is string => p !== null);
-    console.log('Found suitable candidates (will pick the first one, may be undefined): ', results);
+    if (results.length === 0) {
+      console.error('YouTubeSongProvider: yt-dlp binary not found in PATH');
+      throw new Error('yt-dlp not found in PATH');
+    }
+    console.log('YouTubeSongProvider: using yt-dlp binary', results[0]);
 
     if (!this.ytdlp) {
       this.ytdlp = new YtDlp({
@@ -86,7 +90,10 @@ export class YouTubeSongProvider implements SongProvider {
       const info = await ytdlp.getInfoAsync<'playlist'>(this.playlistUrl, {
         flatPlaylist: true
       });
-      if (!info.entries?.length) return [];
+      if (!info.entries?.length) {
+        console.warn('YouTubeSongProvider.fetchSongs: playlist returned no entries');
+        return [];
+      }
 
       return info.entries.map((entry) =>
         this.buildSongData(entry.id, entry, `${this.id}-${entry.id}`)
@@ -168,10 +175,20 @@ export class YouTubeSongProvider implements SongProvider {
       const ytdlp = await this.getYtdlp();
       const info = await ytdlp.getInfoAsync<'video'>(this.getVideoUrl(videoId));
       const thumbnailUrl = info.thumbnail ?? info.thumbnails?.at?.(-1)?.url;
-      if (!thumbnailUrl) return null;
+      if (!thumbnailUrl) {
+        console.warn('YouTubeSongProvider.getCoverStream: no thumbnail for', videoId);
+        return null;
+      }
 
       const response = await fetch(thumbnailUrl);
-      if (!response.ok) return null;
+      if (!response.ok) {
+        console.warn(
+          'YouTubeSongProvider.getCoverStream: thumbnail fetch failed',
+          response.status,
+          thumbnailUrl
+        );
+        return null;
+      }
       return response.body;
     } catch (err) {
       console.warn('YouTubeSongProvider.getCoverStream failed:', err);

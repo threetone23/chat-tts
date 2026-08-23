@@ -103,6 +103,7 @@ export async function buyHandler(
           userId,
           'stock buy failed',
           timeoutSec,
+          username,
           message.userInfo.isMod
         );
       } catch (e) {

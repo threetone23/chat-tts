@@ -58,7 +58,7 @@ maxwellConfig:
 mistakeConfig:
   cost: 5000
   user: mr_auto
-  karma: -1000
+  karma: -200
 showImageConfig:
   cost: 10000
   user: mayoigo_qwq
@@ -130,6 +130,7 @@ stockMarketConfig:
   checkinGrantPoints: 1000
   approvedStocks:
     - HEART
+    - KRMA
   buyFailSteepness: 8
   overpayFactor: 0.1
 

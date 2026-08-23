@@ -41,6 +41,7 @@ function cancelBlackSilenceEffects(ws: WebSocket) {
     })
   );
   cutStore.finish(ws);
+  rotateStore.finish(ws);
 }
 
 export function triggerBlackSilenceEffects(ws: WebSocket) {

@@ -187,6 +187,7 @@ export class TimeoutItem extends GambaItem {
       ctx.userId ?? ctx.username,
       'gamba wheel',
       this.durationSeconds,
+      ctx.username,
       ctx.isMod
     );
     ctx.dispatcher.sendMessageAsUser(
@@ -391,16 +392,19 @@ export const DEFAULT_GAMBA_ITEMS: GambaItem[] = [
   new TakePointsItem(10, 200),
   new TakePointsItem(5, 500),
   new TimeoutItem(5, 5),
-  new GiveStockGrantItem(3, 'HEART', 100)
+  new GiveStockGrantItem(3, 'HEART', 100),
+  new GiveStockGrantItem(3, 'KRMA', 100)
 ];
 
 export const SUB_BITS_GAMBA_ITEMS: GambaItem[] = [
   new GivePointsItem(30, 50),
   new GivePointsItem(30, 50),
   new GiveStockGrantItem(3, 'HEART', 100),
+  new GiveStockGrantItem(3, 'KRMA', 100),
   new GiveEveryonePointsItem(30, 500),
   new GiveEveryonePointsItem(30, 100),
   new GiveEveryoneStockGrantItem(3, 'HEART', 200),
+  new GiveEveryoneStockGrantItem(3, 'KRMA', 200),
   new GiveEveryoneIncreasedChances(10, 10),
   new ResetAllCooldown(5)
 ];
@@ -419,7 +423,9 @@ export const STREAK_GAMBA_ITEMS: GambaItem[] = [
   new GivePointsItem(5, 1000),
   new GiveEveryonePointsItem(20, 250),
   new GiveEveryoneStockGrantItem(10, 'HEART', 100),
+  new GiveEveryoneStockGrantItem(10, 'KRMA', 100),
   new GiveEveryoneIncreasedChances(10, 10),
   new ResetAllCooldown(10),
-  new GiveStockGrantItem(5, 'HEART', 100)
+  new GiveStockGrantItem(5, 'HEART', 100),
+  new GiveStockGrantItem(5, 'KRMA', 100)
 ];

@@ -21,3 +21,12 @@ C52.216,18.553,51.97,16.611,51.911,16.242z"
 ></animateTransform></svg>`;
 
 export const DEFAULT_STOCK_ICON = HEART_ICON;
+
+export const KRMA_ICON = `<svg
+  width="70.90000000000006"
+  height="70.90000000000006"
+  viewBox="0 0 100 100"
+  style="margin: 0px 30px 0px 0px; filter: none;"
+><circle cx="50" cy="50" r="44" fill="#ffd700" stroke="#b8860b" stroke-width="4"></circle>
+<circle cx="50" cy="50" r="33" fill="none" stroke="#fff8dc" stroke-width="2" opacity="0.7"></circle>
+<path d="M38 34 V66 M38 48 L60 34 M38 48 L60 66" fill="none" stroke="#8b6914" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;

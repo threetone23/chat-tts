@@ -143,7 +143,7 @@ const stockMarketConfigSection = alwaysSection('stockMarketConfig', 'Stock Marke
     key: 'approvedStocks',
     kind: 'list-of-text',
     label: 'Approved stocks',
-    default: ['HEART']
+    default: ['HEART', 'KRMA']
   },
   {
     key: 'buyFailSteepness',
@@ -253,6 +253,16 @@ export const COMMAND_DEFINITIONS = [
     help: '%font <fontname> | %font default'
   }),
   defineCommand({
+    names: ['%fontweight', '%fontitalic'],
+    section: section('fontStyleConfig', 'Font Style', [
+      { key: 'cost', kind: 'number', label: 'Cost', default: 10000, min: 0, step: 1 },
+      { key: 'user', kind: 'text', label: 'VIP user', default: 'sqbika' }
+    ]),
+    gateMode: 'overlay',
+    requiresArgs: true,
+    help: '%fontweight <bold|normal> | %fontitalic <on|off>'
+  }),
+  defineCommand({
     names: ['%flashbang'],
     section: section('flashbangConfig', 'Flashbang', [
       { key: 'cost', kind: 'number', label: 'Cost', default: 500, min: 0, step: 1 },
@@ -327,7 +337,7 @@ export const COMMAND_DEFINITIONS = [
     section: section('mistakeConfig', 'Mistake', [
       { key: 'cost', kind: 'number', label: 'Cost', default: 5000, min: 0, step: 1 },
       { key: 'user', kind: 'text', label: 'Free user', default: 'mr_auto' },
-      { key: 'karma', kind: 'number', label: 'Karma', default: -1000, step: 1 }
+      { key: 'karma', kind: 'number', label: 'Karma', default: -200, step: 1 }
     ]),
     gateMode: 'overlay'
   }),

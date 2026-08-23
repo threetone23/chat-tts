@@ -1,4 +1,4 @@
-import type { OverlayDispatchers } from '../../dispatcher';
+import type { OverlayDispatchers, OverlayRaidObserver } from '../../dispatcher';
 import type { ChatMessage } from '@twurple/chat';
 import { checkCostAddIfEnough, TOGGLE_EXPIRY, TOGGLE_COOLDOWN } from '../middleware';
 import { requireUsername } from './shared';
@@ -7,9 +7,25 @@ import type {
   OverlayKarmaConfig,
   OverlaySetTitleConfig
 } from '$lib/config';
-import { goodnightKissStore, karmaStore } from '../../stores';
+import type { RaidOutMessage } from '$lib/bus/messages';
+import { goodnightKissStore, karmaStore, raidStore } from '../../stores';
 import { ApprovableObserver } from '../../approvable';
 import { random } from '$lib/utils';
+
+const GOODNIGHT_KISS_REDEEMERS: string[] = [];
+
+export class GoodnightKissRaidGuard implements OverlayRaidObserver {
+  constructor(dispatcher: OverlayDispatchers) {
+    dispatcher.addRaidObserver(this);
+  }
+
+  onRaidOut(_info: RaidOutMessage) {
+    if (!raidStore.raidedOut) {
+      raidStore.markRaidedOut();
+      console.log('goodnightkiss: raid out detected, timeouts disabled for this session');
+    }
+  }
+}
 
 export async function goodnightkissHandler(
   dispatcher: OverlayDispatchers,
@@ -21,20 +37,34 @@ export async function goodnightkissHandler(
 
   const args = message.text.split(' ').slice(1);
   if (args[0] === 'clear' && (message.userInfo.isMod || message.userInfo.isBroadcaster)) {
-    const { userid, isMod } = goodnightKissStore.reset();
+    const { userid, username, isMod } = goodnightKissStore.reset();
     dispatcher.sendMessageAsUser(message.channelId!, 'cleared', message.id);
-    dispatcher.timeoutUser(
-      message.channelId!,
-      userid,
-      'Good night! EvilTuckk',
-      config.timeoutDurationSec,
-      isMod
-    );
+    if (raidStore.raidedOut) {
+      console.log('goodnightkiss clear: raid out this session, skipping timeout');
+    } else {
+      dispatcher.timeoutUser(
+        message.channelId!,
+        userid,
+        'Good night! EvilTuckk',
+        config.timeoutDurationSec,
+        username,
+        isMod
+      );
+    }
     return;
   }
 
   if (goodnightKissStore.isPopulated()) {
     dispatcher.sendMessageAsUser(message.channelId!, 'goodnightkiss already ongoing', message.id);
+    return;
+  }
+
+  if (GOODNIGHT_KISS_REDEEMERS.includes(username)) {
+    dispatcher.sendMessageAsUser(
+      message.channelId!,
+      'goodnightkiss can only be redeemed once per stream',
+      message.id
+    );
     return;
   }
 
@@ -50,6 +80,7 @@ export async function goodnightkissHandler(
       message.id
     ))
   ) {
+    GOODNIGHT_KISS_REDEEMERS.push(username);
     goodnightKissStore.setProperties({
       username: username ?? 'no username?',
       userid: targetUserId,

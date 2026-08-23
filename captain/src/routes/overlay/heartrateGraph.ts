@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 
-export function buildSvgGraphFor(numbers: number[]): SVGSVGElement | null {
+export function buildSvgGraphFor(numbers: number[], color: string = 'red'): SVGSVGElement | null {
   const width = 928;
   const height = 500;
   const marginTop = 20;
@@ -32,7 +32,7 @@ export function buildSvgGraphFor(numbers: number[]): SVGSVGElement | null {
   svg
     .append('path')
     .attr('fill', 'none')
-    .attr('stroke', 'red')
+    .attr('stroke', color)
     .attr('stroke-width', 10.0)
     .attr('d', line(dataset));
 

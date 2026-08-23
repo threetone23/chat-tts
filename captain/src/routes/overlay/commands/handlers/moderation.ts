@@ -170,7 +170,8 @@ export async function killHandler(dispatcher: OverlayDispatchers, message: ChatM
         originalMessageChannelId,
         chatter.userId,
         'by popular vote, u died, gg no re',
-        180
+        180,
+        chatter.userName
       );
       dispatcher.sendMessageAsUser(
         originalMessageChannelId,

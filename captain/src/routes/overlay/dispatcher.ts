@@ -9,6 +9,7 @@ import type { ModelUpdater } from './modelupdater';
 import { LRUCache } from '$lib/LRUcache';
 import { planToTier } from '$lib/twitch';
 import { applyTimeoutTax } from './tax';
+import type { RaidOutMessage } from '$lib/bus/messages';
 import { PUBLIC_TARGET_CHANNEL_ID } from '$env/static/public';
 
 export interface OverlayObserver {
@@ -21,6 +22,10 @@ export interface OverlayTimeoutObserver {
 
 export interface OverlayViewerMilestoneObserver {
   onViewerMilestone(info: ChatViewerMilestoneInfo, notice: UserNotice): void;
+}
+
+export interface OverlayRaidObserver {
+  onRaidOut(info: RaidOutMessage): void;
 }
 
 export interface OverlaySubObserver {
@@ -40,6 +45,7 @@ export class OverlayDispatchers {
   timeoutObservers: OverlayTimeoutObserver[] = [];
   subObservers: OverlaySubObserver[] = [];
   viewerMilestoneObservers: OverlayViewerMilestoneObserver[] = [];
+  raidObservers: OverlayRaidObserver[] = [];
   userCache: LRUCache<HelixUser> = new LRUCache(10);
   private api: ApiClient;
   private botId: string;
@@ -139,11 +145,25 @@ export class OverlayDispatchers {
     }
   }
 
+  addRaidObserver(observer: OverlayRaidObserver) {
+    if (!this.raidObservers.includes(observer)) {
+      this.raidObservers.push(observer);
+      console.debug(`addRaidObserver: ${observer.constructor.name}`);
+    }
+  }
+
   dispatchMessage(message: ChatMessage) {
     console.log(
       `dispatchMessage (fake): "${message.text}" from ${message.userInfo?.userName} -> ${this.observers.length} observer(s)`
     );
     this.onMessage(message);
+  }
+
+  onRaidOut(info: RaidOutMessage) {
+    console.log(`onRaidOut: raided out to ${info.raiderName} (${info.viewers} viewer(s))`);
+    for (const observer of this.raidObservers) {
+      observer.onRaidOut(info);
+    }
   }
 
   private onMessage(message: ChatMessage) {
@@ -253,34 +273,35 @@ export class OverlayDispatchers {
 
   async timeoutUser(
     channelId: string,
-    targetUser: string,
+    targetUserId: string,
     reason: string,
     duration_seconds: number,
+    targetUsername: string,
     isMod?: boolean
   ) {
     if (import.meta.env.DEV) {
       console.log(
-        `Would have timed out ${targetUser} for ${reason} for ${duration_seconds} seconds.`
+        `Would have timed out ${targetUsername} for ${reason} for ${duration_seconds} seconds.`
       );
       return;
     }
 
     if (isMod) {
-      await applyTimeoutTax(this, channelId, targetUser, 0.2);
-      console.log(`timeoutUser: ${targetUser} is a mod, applied 20% tax instead of ban`);
+      await applyTimeoutTax(this, channelId, targetUsername, 0.2);
+      console.log(`timeoutUser: ${targetUsername} is a mod, applied 20% tax instead of ban`);
       return;
     }
 
     try {
       return await this.api.asUser(this.botId, async (ctx) => {
         return await ctx.moderation.banUser(channelId, {
-          user: targetUser,
+          user: targetUserId,
           reason,
           duration: duration_seconds
         });
       });
     } catch (e) {
-      console.warn(`timeoutUser failed for ${targetUser}:`, e);
+      console.warn(`timeoutUser failed for ${targetUserId}:`, e);
     }
   }
 

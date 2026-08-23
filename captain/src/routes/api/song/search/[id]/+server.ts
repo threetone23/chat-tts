@@ -13,5 +13,6 @@ export const GET: RequestHandler = async ({ params }) => {
       return json(song);
     }
   }
+  console.warn(`song search: no provider could resolve "${id}" (${providers.map((p) => p.id).join(', ')})`);
   error(404, 'Song not found');
 };

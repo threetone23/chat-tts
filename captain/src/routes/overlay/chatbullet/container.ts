@@ -11,7 +11,7 @@ import { PUBLIC_TARGET_CHANNEL_ID } from '$env/static/public';
 import { isImageBulletPart, isTextBulletPart, splitMessage, type BulletPart } from './parsing';
 import { shouldSkipMessage } from '$lib/messageGuard';
 import type { SpeakTTS } from '$lib/remoteTTSMessages';
-import { getFontUrl } from '$lib/api/font';
+import { getFontUrl, getUserFontStyle } from '$lib/api/font';
 
 const PADDING = 5;
 const CACHE_SIZE = 30;
@@ -31,6 +31,9 @@ export class ChatBulletContainer implements OverlayObserver {
   private cache = new LRUCache<Texture[]>(CACHE_SIZE);
   private subTierCache = new LRUCache<number>(CACHE_SIZE);
   private fontCache = new LRUCache<string>(CACHE_SIZE);
+  private fontStyleCache = new LRUCache<{ weight: 'normal' | 'bold'; italic: 'normal' | 'italic' }>(
+    CACHE_SIZE
+  );
   private badgeTextureCache = new LRUCache<Texture>(CACHE_SIZE);
 
   constructor(dispatcher: OverlayDispatchers, kikiUrl: string, app: Application) {
@@ -127,6 +130,7 @@ export class ChatBulletContainer implements OverlayObserver {
 
   invalidateUserFont(userName: string): void {
     this.fontCache.delete(userName);
+    this.fontStyleCache.delete(userName);
     const family = `font-user-${userName}`;
     for (const face of document.fonts) {
       if (face.family === family) {
@@ -134,6 +138,27 @@ export class ChatBulletContainer implements OverlayObserver {
         break;
       }
     }
+  }
+
+  private async resolveUserFontStyle(
+    userName: string
+  ): Promise<{ weight: 'normal' | 'bold'; italic: 'normal' | 'italic' }> {
+    const cached = this.fontStyleCache.get(userName);
+    if (cached !== null) return cached;
+
+    let style: { weight: string; italic: number } | null = null;
+    try {
+      style = await getUserFontStyle(userName);
+    } catch {
+      style = null;
+    }
+
+    const result = {
+      weight: style?.weight === 'bold' ? ('bold' as const) : ('normal' as const),
+      italic: style?.italic ? ('italic' as const) : ('normal' as const)
+    };
+    this.fontStyleCache.put(userName, result);
+    return result;
   }
 
   private async willKikiReadMessage(message: ChatMessage): Promise<boolean> {
@@ -171,6 +196,7 @@ export class ChatBulletContainer implements OverlayObserver {
     const displayName = message.userInfo.displayName ?? message.userInfo.userName;
     const color = message.userInfo.color;
     const selectedFamily = await this.resolveUserFontFamily(message.userInfo.userName);
+    const selectedStyle = await this.resolveUserFontStyle(message.userInfo.userName);
     const badges = message.userInfo.badges;
     console.debug(`${displayName} has ${badges.size} badges`);
     console.debug(
@@ -191,7 +217,16 @@ export class ChatBulletContainer implements OverlayObserver {
         displayName ?? 'anonymous',
         message.text
       );
-      this.spawnBullet(displayName, parts, kikiResponse, color, selectedFamily, badgeUrls);
+      this.spawnBullet(
+        displayName,
+        parts,
+        kikiResponse,
+        color,
+        selectedFamily,
+        badgeUrls,
+        selectedStyle.weight,
+        selectedStyle.italic
+      );
 
       if (kikiResponse?.pin_worthy) {
         pinStore.set({
@@ -204,7 +239,16 @@ export class ChatBulletContainer implements OverlayObserver {
         this.dispatcher.pinChatMessage(PUBLIC_TARGET_CHANNEL_ID, message.id, 60);
       }
     } else {
-      this.spawnBullet(displayName, parts, null, color, selectedFamily, badgeUrls);
+      this.spawnBullet(
+        displayName,
+        parts,
+        null,
+        color,
+        selectedFamily,
+        badgeUrls,
+        selectedStyle.weight,
+        selectedStyle.italic
+      );
     }
 
     if (isDelegateVoiceToOverlay() && this.busWs?.readyState === WebSocket.OPEN) {
@@ -229,7 +273,9 @@ export class ChatBulletContainer implements OverlayObserver {
     kikiResponse: KikiResponse | null,
     color: string = '#D3D3D3',
     selectedFamily: string = 'Arial',
-    badgeUrls: string[] = []
+    badgeUrls: string[] = [],
+    weight: 'normal' | 'bold' = 'normal',
+    italic: 'normal' | 'italic' = 'normal'
   ) {
     const { width, height } = this.app.screen;
     const rate = Math.max(random(), 0.25) * (1000 / 60);
@@ -276,7 +322,9 @@ export class ChatBulletContainer implements OverlayObserver {
           fontFamily: selectedFamily,
           fontSize: 24,
           fill: fillColor,
-          stroke: { color: strokeColor, width: 2 }
+          stroke: { color: strokeColor, width: 2 },
+          fontWeight: weight,
+          fontStyle: italic
         }
       });
 
@@ -329,7 +377,9 @@ export class ChatBulletContainer implements OverlayObserver {
           fontFamily: selectedFamily,
           fontSize: 48,
           fill: fillColor,
-          stroke: { color: strokeColor, width: 2 }
+          stroke: { color: strokeColor, width: 2 },
+          fontWeight: weight,
+          fontStyle: italic
         });
 
         const partText = new Text({ text: part.text, style: textStyle });

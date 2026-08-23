@@ -156,6 +156,8 @@ export interface OverlayFontConfig {
   user: string;
 }
 
+export type OverlayFontStyleConfig = OverlayFontConfig;
+
 export interface OverlayPollConfig {}
 
 export interface OverlayPredictionConfig {}
@@ -310,6 +312,7 @@ export interface FullConfig {
   captchaConfig: OverlayCaptchaConfig;
   checkInConfig?: OverlayCheckInConfig;
   fontConfig?: OverlayFontConfig;
+  fontStyleConfig?: OverlayFontStyleConfig;
   pollConfig?: OverlayPollConfig;
   predictionConfig?: OverlayPredictionConfig;
   economyConfig?: OverlayEconomyConfig;

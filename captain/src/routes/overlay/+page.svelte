@@ -28,6 +28,7 @@
   import { getOverlayConfig, applyOverlayConfig } from './constants';
   import { Commands } from './commands';
   import { CutSessionGateExemption } from './commands/cutSessionGateExemption';
+  import { GoodnightKissRaidGuard } from './commands/handlers/interactive';
   import {
     pollStore,
     predictionStore,
@@ -50,6 +51,7 @@
   } from './stores';
   import { startCaptchaLoop } from './captcha';
   import { Heartrate } from './heartrate';
+  import { KarmaStock } from './stock/karma';
   import { createAndStartCycler, type CyclerSnapshot } from './stock/cycler.svelte';
   import { DEFAULT_STOCK_ICON } from './stock/icons';
   import type { ChatClient } from '@twurple/chat';
@@ -69,7 +71,8 @@
     isOverlayPositionsMessage,
     isTokenRefreshedMessage,
     isConfigUpdatedMessage,
-    isFontChangedMessage
+    isFontChangedMessage,
+    isRaidOutMessage
   } from '$lib/bus/messages';
   import { formatRemaining } from '$lib/duration';
   import { gambaStore } from './gamba/gamba.svelte';
@@ -80,6 +83,7 @@
 
   let chatBulletContainer: HTMLDivElement;
   let heartrate = new Heartrate(PUBLIC_HEARTRATE_URL);
+  const _karmaStock = new KarmaStock();
 
   let flashbangCount: number = $state(0);
   let blackSilenceCount: number = $state(0);
@@ -357,6 +361,8 @@
         }
       } else if (data.type === 'karma-update') {
         karmaStore.updateKarma(data.amount, data.label);
+      } else if (isRaidOutMessage(data)) {
+        dispatchers?.onRaidOut(data);
       }
     } catch {
       // ignore malformed messages
@@ -632,8 +638,8 @@
             }
           });
         }
-      } catch {
-        /* ignore */
+      } catch (e) {
+        console.warn('failed to install song audio engine handlers:', e);
       }
     });
 
@@ -658,7 +664,7 @@
     const cycler = createAndStartCycler();
     cycler.subscribe((snap) => {
       cyclerSnapshot = snap;
-      const graph = buildSvgGraphFor(snap.history);
+      const graph = buildSvgGraphFor(snap.history, snap.color ?? 'red');
       if (!graph) return;
       heartrateGraphParent.innerHTML = '';
       heartrateGraphParent.appendChild(graph);
@@ -687,6 +693,7 @@
     let _subTracker = new SubTracker(dispatchers, commands);
     let _watchStreakTracker = new WatchStreakTracker(dispatchers, commands);
     let _newChatterGreeter = new NewChatterGreeter(dispatchers);
+    let _gnkRaidGuard = new GoodnightKissRaidGuard(dispatchers);
     twitchClient.connect();
     console.log('Twitch connected');
 

@@ -84,8 +84,12 @@ export function createGoodnightKissStore() {
     return properties.username.length !== 0;
   }
 
-  function reset(): { userid: string; isMod: boolean } {
-    const retVal = { userid: properties.userid, isMod: properties.isMod };
+  function reset(): { username: string; userid: string; isMod: boolean } {
+    const retVal = {
+      username: properties.username,
+      userid: properties.userid,
+      isMod: properties.isMod
+    };
     properties = {
       username: '',
       userid: '',

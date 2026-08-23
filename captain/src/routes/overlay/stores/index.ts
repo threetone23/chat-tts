@@ -17,6 +17,7 @@ import {
 } from './rest.svelte';
 import { createCutStore } from './cut.svelte';
 import { createRotateStore } from './rotate';
+import { createRaidStore } from './raid.svelte';
 
 export const pollStore = createPollStore();
 export const predictionStore = createPredictionStore();
@@ -33,6 +34,7 @@ export const pinStore = createPinStore();
 export const importantStore = createImportantStore();
 export const cutStore = createCutStore();
 export const rotateStore = createRotateStore();
+export const raidStore = createRaidStore();
 
 export { positionStore, DEFAULT_POSITIONS } from './positions.svelte';
 
@@ -41,5 +43,6 @@ export {
   createCheckInStore,
   createKarmaStore,
   createMakiStore,
-  createPinStore
+  createPinStore,
+  createRaidStore
 };

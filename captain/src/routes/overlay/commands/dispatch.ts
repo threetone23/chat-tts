@@ -9,6 +9,7 @@ import type {
   OverlayCutConfig,
   OverlayFlashbangConfig,
   OverlayFontConfig,
+  OverlayFontStyleConfig,
   OverlayGoodNightKissConfig,
   OverlayGrayscaleConfig,
   OverlayKarmaConfig,
@@ -60,7 +61,7 @@ import {
 import { gambaHandler } from './handlers/gamba';
 import { lotteryHandler } from './handlers/lottery';
 import { checkHandler } from './handlers/evaluate';
-import { fontCommandHandler } from './handlers/font';
+import { fontCommandHandler, fontStyleCommandHandler } from './handlers/font';
 import { pollCommandHandler, endPollCommandHandler } from '../poll.svelte';
 import { predictionCommandHandler, endPredictionCommandHandler } from '../prediction.svelte';
 
@@ -143,7 +144,11 @@ export const COMMAND_HANDLERS: Partial<Record<ChatCommand, CommandRunner>> = {
     commands.unimportantHandler(dispatcher, message),
   '%check': (commands, dispatcher, message) => checkHandler(commands, dispatcher, message),
   '%font': (commands, dispatcher, message, config) =>
-    fontCommandHandler(commands, dispatcher, message, config as OverlayFontConfig)
+    fontCommandHandler(commands, dispatcher, message, config as OverlayFontConfig),
+  '%fontweight': (commands, dispatcher, message, config) =>
+    fontStyleCommandHandler(commands, dispatcher, message, config as OverlayFontStyleConfig, 'weight'),
+  '%fontitalic': (commands, dispatcher, message, config) =>
+    fontStyleCommandHandler(commands, dispatcher, message, config as OverlayFontStyleConfig, 'italic')
 };
 
 type _Expect<T extends true> = T;

@@ -20,7 +20,7 @@ export function initDbIfRequired(): Promise<void> {
     `CREATE TABLE IF NOT EXISTS lottery_tax (id INTEGER PRIMARY KEY CHECK (id = 1), amount INTEGER NOT NULL DEFAULT 0)`,
     `CREATE TABLE IF NOT EXISTS fonts (fontname TEXT NOT NULL PRIMARY KEY, filename TEXT NOT NULL, approved_at INTEGER NOT NULL)`,
     `CREATE TABLE IF NOT EXISTS pending_fonts (id INTEGER PRIMARY KEY AUTOINCREMENT, fontname TEXT NOT NULL, temp_path TEXT NOT NULL, message_id TEXT NOT NULL, uploader TEXT NOT NULL, created_at INTEGER NOT NULL)`,
-    `CREATE TABLE IF NOT EXISTS user_fonts (username TEXT NOT NULL PRIMARY KEY, fontname TEXT NOT NULL, updated_at INTEGER NOT NULL)`
+    `CREATE TABLE IF NOT EXISTS user_fonts (username TEXT NOT NULL PRIMARY KEY, fontname TEXT NOT NULL, updated_at INTEGER NOT NULL, weight TEXT NOT NULL DEFAULT 'normal', italic INTEGER NOT NULL DEFAULT 0)`
   ];
   return new Promise((resolve, reject) => {
     let completed = 0;
@@ -723,7 +723,8 @@ export function getUserFont(
 export function setUserFont(username: string, fontname: string): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run(
-      'INSERT OR REPLACE INTO user_fonts VALUES (?, ?, ?)',
+      `INSERT INTO user_fonts (username, fontname, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(username) DO UPDATE SET fontname = excluded.fontname, updated_at = excluded.updated_at`,
       [username, fontname, Date.now()],
       (e: Error | null) => {
         if (e) {
@@ -751,5 +752,56 @@ export function deleteUserFont(username: string): Promise<void> {
       console.log(`User font cleared: ${username}`);
       resolve();
     });
+  });
+}
+
+export function getUserFontStyle(
+  username: string
+): Promise<{ weight: string; italic: number } | null> {
+  return new Promise((resolve, reject) => {
+    db.all(
+      'SELECT weight, italic FROM user_fonts WHERE username = ?',
+      [username],
+      (e: Error | null, result: { weight: string; italic: number }[]) => {
+        if (e) {
+          console.warn('database error', e);
+          reject(e);
+          return;
+        }
+
+        const row = result[0];
+        resolve(row ? { weight: row.weight, italic: row.italic } : null);
+      }
+    );
+  });
+}
+
+export function setUserFontStyle(
+  username: string,
+  weight: string | null,
+  italic: number | null
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `INSERT INTO user_fonts (username, fontname, updated_at, weight, italic)
+       VALUES (?, '', ?, COALESCE(?, 'normal'), COALESCE(?, 0))
+       ON CONFLICT(username) DO UPDATE SET
+         weight = COALESCE(excluded.weight, user_fonts.weight),
+         italic = COALESCE(excluded.italic, user_fonts.italic),
+         updated_at = excluded.updated_at`,
+      [username, Date.now(), weight, italic],
+      (e: Error | null) => {
+        if (e) {
+          console.warn('database error', e);
+          reject(e);
+          return;
+        }
+
+        console.log(
+          `User font style set: ${username} -> weight=${weight ?? 'unchanged'}, italic=${italic ?? 'unchanged'}`
+        );
+        resolve();
+      }
+    );
   });
 }

@@ -79,6 +79,7 @@ export class CommandGate {
         userId,
         'command failed',
         timeoutSec,
+        username,
         message.userInfo.isMod
       );
     } catch (e) {

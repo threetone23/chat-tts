@@ -44,7 +44,8 @@
       const res = await fetch('/api/song/providers');
       providers = await res.json();
       if (providers.length > 0) selectedProviderId = providers[0].id;
-    } catch {
+    } catch (e) {
+      console.warn('failed to fetch song providers:', e);
       providers = [];
     }
   }
@@ -54,7 +55,8 @@
     try {
       const res = await fetch(`/api/song/${selectedProviderId}/fetch`);
       availableSongs = await res.json();
-    } catch {
+    } catch (e) {
+      console.warn(`failed to fetch songs for ${selectedProviderId}:`, e);
       availableSongs = [];
     }
   }

@@ -105,6 +105,12 @@ export interface TokenRefreshedMessage {
   account: 'bot' | 'broadcaster';
 }
 
+export interface RaidOutMessage {
+  type: 'raid-out';
+  raiderName: string;
+  viewers: number;
+}
+
 export type ClientToServer =
   | FakerMessage
   | FakerSubMessage
@@ -119,6 +125,7 @@ export type ServerToClient =
   | PredictionUpdateMessage
   | KarmaUpdateMessage
   | TokenRefreshedMessage
+  | RaidOutMessage
   | ConfigUpdatedMessage;
 
 export type BusMessage = ClientToServer | ServerToClient;
@@ -205,6 +212,10 @@ export function isTokenRefreshedMessage(obj: unknown): obj is TokenRefreshedMess
     obj !== null &&
     (obj as TokenRefreshedMessage).type === 'tokenRefreshed'
   );
+}
+
+export function isRaidOutMessage(obj: unknown): obj is RaidOutMessage {
+  return typeof obj === 'object' && obj !== null && (obj as RaidOutMessage).type === 'raid-out';
 }
 
 export function stripAnsi(s: string): string {
