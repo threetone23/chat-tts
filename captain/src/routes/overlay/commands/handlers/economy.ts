@@ -41,21 +41,39 @@ export async function transferHandler(dispatcher: OverlayDispatchers, message: C
   );
 }
 
-export async function givePointsHandler(dispatcher: OverlayDispatchers, message: ChatMessage) {
+export async function grantHandler(dispatcher: OverlayDispatchers, message: ChatMessage) {
   const username = requireUsername(message);
   if (!username) return;
-  if (!message.userInfo.isBroadcaster) return;
+  if (!(message.userInfo.isBroadcaster || message.userInfo.isMod)) return;
 
-  const splitted = message.text.split(' ');
-  const target = splitted[1].toLowerCase();
-  const points = Number(splitted[2]);
-  if (!target || Number.isNaN(points)) {
-    dispatcher.sendMessageAsUser(message.channelId!, 'invalid arguments', message.id);
+  const args = message.text.split(' ').slice(1);
+  if (args.length < 3 || args.length > 4) {
+    dispatcher.sendMessageAsUser(message.channelId!, 'invalid amount of arguments, want: <asset> <amount> <target> <reason?>', message.id);
     return;
   }
 
-  (await checkCostAddIfEnough(dispatcher, message.channelId!, target, points, message.id))!;
-  dispatcher.sendMessageAsUser(message.channelId!, `given ${points} to ${target}`, message.id);
+  const asset = args[0].toUpperCase();
+  const amount = Number(args[1]);
+  const target = args[2].toLowerCase();
+  const reason = args[3] ?? null;
+
+  if (Number.isNaN(amount)) {
+    dispatcher.sendMessageAsUser(message.channelId!, `invalid amount "${amount}"`, message.id);
+    return;
+  }
+
+  if (!(asset === 'POINTS' || GLOBAL_STOCK_MARKET.approvedStocks().includes(asset))) {
+    dispatcher.sendMessageAsUser(message.channelId!, `invalid asset "${asset}", want either of: ${['POINTS', ...GLOBAL_STOCK_MARKET.approvedStocks()].join(', ')}`, message.id);
+    return;
+
+  }
+
+  if (asset === 'POINTS') {
+    (await checkCostAddIfEnough(dispatcher, message.channelId!, target, amount, message.id))!;
+  } else {
+    (await GLOBAL_STOCK_MARKET.grantPoints(target, asset, amount))!
+  }
+  dispatcher.sendMessageAsUser(message.channelId!, `granted ${amount} of ${asset} to ${target} for reason: ${reason}`, message.id);
 }
 
 export function getPointsHandler(dispatcher: OverlayDispatchers, message: ChatMessage) {

@@ -307,11 +307,11 @@ export const COMMAND_DEFINITIONS = [
     gateMode: 'overlay'
   }),
   defineCommand({
-    names: ['%givepoints'],
+    names: ['%grant'],
     section: economyConfigSection,
     gateMode: 'overlay',
     requiresArgs: true,
-    help: '%givepoints <username> <amount>'
+    help: '%grant <asset> <amount> <target> <reason?>'
   }),
   defineCommand({
     names: ['%transfer'],

@@ -50,6 +50,7 @@ export async function checkCostAddIfEnough(
 
       if (check_only) return false;
 
+      //FIXME: util interacts with chat
       dispatcher.sendMessageAsUser(broadcaster_id, `you can't afford this PoorVanor`, message_id);
       return false;
     })

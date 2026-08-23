@@ -24,7 +24,7 @@ import type {
 } from '$lib/config';
 import {
   transferHandler,
-  givePointsHandler,
+  grantHandler,
   getPointsHandler,
   checkInHandler,
   medianHandler
@@ -88,7 +88,7 @@ export const COMMAND_HANDLERS: Partial<Record<ChatCommand, CommandRunner>> = {
   '%blacksilence': (commands, dispatcher, message, config) =>
     blackSilenceHandler(dispatcher, message, commands.busWs!, config as OverlayBlackSilenceConfig),
   '%points': (_commands, dispatcher, message) => getPointsHandler(dispatcher, message),
-  '%givepoints': (_commands, dispatcher, message) => givePointsHandler(dispatcher, message),
+  '%grant': (_commands, dispatcher, message) => grantHandler(dispatcher, message),
   '%transfer': (_commands, dispatcher, message) => transferHandler(dispatcher, message),
   '%maxwell': (_commands, dispatcher, message, config) =>
     maxwellHandler(dispatcher, message, config as OverlayMaxwellConfig),
