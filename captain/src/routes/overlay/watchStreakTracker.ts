@@ -46,7 +46,7 @@ export class WatchStreakTracker implements OverlayViewerMilestoneObserver {
 
     this.dispatchers.sendMessageAsUser(
       channelId,
-      `@${username} shared a watch streak of ${watchStreak}, spinning the gamba wheel!`
+      `@${username} shared a watch streak of ${watchStreak}, vanorSpin the gamba wheel!`
     );
   }
 }

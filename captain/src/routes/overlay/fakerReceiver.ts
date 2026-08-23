@@ -50,7 +50,7 @@ export function installFakerReceiver(
 
       dispatcher.sendMessageAsUser(
         channelId,
-        `@${name} received a fake gift sub (tier ${tier}), spinning the gamba wheel!`
+        `@${name} received a fake gift sub (tier ${tier}), vanorSpin the gamba wheel!`
       );
       return;
     }
@@ -85,7 +85,7 @@ export function installFakerReceiver(
 
       dispatcher.sendMessageAsUser(
         channelId,
-        `@${name} cheered ${amount} bits, spinning the gamba wheel!`
+        `@${name} cheered ${amount} bits, vanorSpin the gamba wheel!`
       );
     }
 

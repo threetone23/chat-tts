@@ -175,7 +175,7 @@ export class Commands implements OverlayObserver {
 
     this.dispatchers!.sendMessageAsUser(
       message.channelId!,
-      `@${username} cheered ${bits} bits, spinning the gamba wheel!`,
+      `@${username} cheered ${bits} bits, vanorSpin the gamba wheel!`,
       message.id
     );
   }

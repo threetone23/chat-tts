@@ -39,7 +39,7 @@ export class SubTracker implements OverlaySubObserver {
 
     this.dispatchers.sendMessageAsUser(
       channelId,
-      `@${user} subscribed at tier ${tier}, spinning the gamba wheel!`
+      `@${user} subscribed at tier ${tier}, vanorSpin the gamba wheel!`
     );
   }
 
@@ -65,7 +65,7 @@ export class SubTracker implements OverlaySubObserver {
 
     this.dispatchers.sendMessageAsUser(
       channelId,
-      `@${user} resubscribed at tier ${tier}, spinning the gamba wheel!`
+      `@${user} resubscribed at tier ${tier}, vanorSpin the gamba wheel!`
     );
   }
 
@@ -97,7 +97,7 @@ export class SubTracker implements OverlaySubObserver {
 
     this.dispatchers.sendMessageAsUser(
       channelId,
-      `@${recipientUser} received a gift sub (tier ${tier}), spinning the gamba wheel!`
+      `@${recipientUser} received a gift sub (tier ${tier}), vanorSpin the gamba wheel!`
     );
   }
 

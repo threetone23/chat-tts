@@ -250,5 +250,5 @@ export function rotateHandler(dispatcher: OverlayDispatchers, message: ChatMessa
   const durationMs = 60000 / Math.abs(speed);
 
   rotateStore.doRotate(ws, Math.sign(speed) * 360, durationMs);
-  dispatcher.sendMessageAsUser(message.channelId!, 'spinning the screen', message.id);
+  dispatcher.sendMessageAsUser(message.channelId!, 'vanorSpin the screen', message.id);
 }
