@@ -28,7 +28,6 @@
   import { getOverlayConfig, applyOverlayConfig } from './constants';
   import { Commands } from './commands';
   import { CutSessionGateExemption } from './commands/cutSessionGateExemption';
-  import { GoodnightKissRaidGuard } from './commands/handlers/interactive';
   import {
     pollStore,
     predictionStore,
@@ -73,8 +72,7 @@
     isOverlayPositionsMessage,
     isTokenRefreshedMessage,
     isConfigUpdatedMessage,
-    isFontChangedMessage,
-    isRaidOutMessage
+    isFontChangedMessage
   } from '$lib/bus/messages';
   import { formatRemaining } from '$lib/duration';
   import { gambaStore } from './gamba/gamba.svelte';
@@ -364,8 +362,6 @@
         }
       } else if (data.type === 'karma-update') {
         karmaStore.updateKarma(data.amount, data.label);
-      } else if (isRaidOutMessage(data)) {
-        dispatchers?.onRaidOut(data);
       }
     } catch {
       // ignore malformed messages
@@ -696,7 +692,6 @@
     let _subTracker = new SubTracker(dispatchers, commands);
     let _watchStreakTracker = new WatchStreakTracker(dispatchers, commands);
     let _newChatterGreeter = new NewChatterGreeter(dispatchers);
-    let _gnkRaidGuard = new GoodnightKissRaidGuard(dispatchers);
 
     GLOBAL_BANKRUPTCY_MONITOR.setEffects({
       onBankruptcy: async (provider, _value, _rule) => {

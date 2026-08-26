@@ -48,6 +48,7 @@ import {
 } from './handlers/stockmarket';
 import {
   goodnightkissHandler,
+  raidHandler,
   settitleHandler,
   giveKarmaHandler,
   togglesHandler
@@ -117,6 +118,7 @@ export const COMMAND_HANDLERS: Partial<Record<ChatCommand, CommandRunner>> = {
     selfThoughtHandler(dispatcher, message, config as OverlaySelfThoughtConfig),
   '%goodnightkiss': (_commands, dispatcher, message, config) =>
     goodnightkissHandler(dispatcher, message, config as OverlayGoodNightKissConfig),
+  '%raid': (_commands, dispatcher, message) => raidHandler(dispatcher, message),
   '%settitle': (_commands, dispatcher, message, config) =>
     settitleHandler(dispatcher, message, config as OverlaySetTitleConfig),
   '%givekarma': (_commands, dispatcher, message) => giveKarmaHandler(dispatcher, message),

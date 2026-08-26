@@ -5,10 +5,15 @@ export function createRaidStore() {
     raidedOut = true;
   }
 
+  function resetRaidedOut() {
+    raidedOut = false;
+  }
+
   return {
     get raidedOut() {
       return raidedOut;
     },
-    markRaidedOut
+    markRaidedOut,
+    resetRaidedOut
   };
 }

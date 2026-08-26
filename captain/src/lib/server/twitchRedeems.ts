@@ -1,7 +1,7 @@
 import { getBroadcasterApi } from '$lib/server/twitchAuth';
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { ApiClient } from '@twurple/api';
-import { getController, getSenderWs } from './runtime';
+import { getController } from './runtime';
 import { getRedeemHandler } from './redeems/registry';
 
 let api: ApiClient | null = null;
@@ -136,24 +136,6 @@ export async function initializeTwitchRedeems() {
 
   listener.onChannelRedemptionAdd(broadcasterId, handleRedemption);
   console.log(`twitchRedeems: subscribed to redemption events for broadcaster ${broadcasterId}`);
-
-  listener.onChannelRaidFrom(broadcasterId, (event) => {
-    console.log(
-      `twitchRedeems: raiding out to ${event.raidedBroadcasterName} with ${event.viewers} viewer(s)`
-    );
-    const ws = getSenderWs();
-    if (ws && ws.readyState === ws.OPEN) {
-      ws.send(
-        JSON.stringify({
-          type: 'raid-out',
-          raiderName: event.raidedBroadcasterName,
-          viewers: event.viewers
-        })
-      );
-    } else {
-      console.warn('twitchRedeems: raid-out seen but bus socket not open, overlay not notified');
-    }
-  });
 
   await listRewardsAndLog();
 }

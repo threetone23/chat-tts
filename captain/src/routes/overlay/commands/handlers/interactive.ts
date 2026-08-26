@@ -1,4 +1,4 @@
-import type { OverlayDispatchers, OverlayRaidObserver } from '../../dispatcher';
+import type { OverlayDispatchers } from '../../dispatcher';
 import type { ChatMessage } from '@twurple/chat';
 import { checkCostAddIfEnough, TOGGLE_EXPIRY, TOGGLE_COOLDOWN } from '../middleware';
 import { requireUsername } from './shared';
@@ -7,24 +7,59 @@ import type {
   OverlayKarmaConfig,
   OverlaySetTitleConfig
 } from '$lib/config';
-import type { RaidOutMessage } from '$lib/bus/messages';
 import { goodnightKissStore, karmaStore, raidStore } from '../../stores';
 import { ApprovableObserver } from '../../approvable';
 import { random } from '$lib/utils';
 
 const GOODNIGHT_KISS_REDEEMERS: string[] = [];
 
-export class GoodnightKissRaidGuard implements OverlayRaidObserver {
-  constructor(dispatcher: OverlayDispatchers) {
-    dispatcher.addRaidObserver(this);
+export async function raidHandler(dispatcher: OverlayDispatchers, message: ChatMessage) {
+  if (!message.userInfo.isBroadcaster) return;
+
+  const args = message.text.split(' ').slice(1);
+
+  if (args[0]?.toLowerCase() === 'cancel') {
+    if (!raidStore.raidedOut) {
+      dispatcher.sendMessageAsUser(message.channelId!, 'no raid to cancel', message.id);
+      return;
+    }
+
+    if (!(await dispatcher.cancelRaid(message.channelId!))) {
+      dispatcher.sendMessageAsUser(message.channelId!, 'raid cancel failed', message.id);
+      return;
+    }
+
+    raidStore.resetRaidedOut();
+    console.log('raid: raid canceled, timeouts re-enabled for this session');
+    dispatcher.sendMessageAsUser(message.channelId!, 'raid canceled', message.id);
+    return;
   }
 
-  onRaidOut(_info: RaidOutMessage) {
-    if (!raidStore.raidedOut) {
-      raidStore.markRaidedOut();
-      console.log('goodnightkiss: raid out detected, timeouts disabled for this session');
-    }
+  if (raidStore.raidedOut) {
+    dispatcher.sendMessageAsUser(message.channelId!, 'already raided out', message.id);
+    return;
   }
+
+  const targetName = args[0]?.replace(/^@/, '');
+  if (!targetName) {
+    dispatcher.sendMessageAsUser(message.channelId!, 'specify a channel to raid', message.id);
+    return;
+  }
+
+  const target = await dispatcher.getHelixUserFromName(targetName);
+  if (!target) {
+    dispatcher.sendMessageAsUser(message.channelId!, 'user not found', message.id);
+    return;
+  }
+
+  if (!(await dispatcher.startRaid(message.channelId!, target.id))) {
+    dispatcher.sendMessageAsUser(message.channelId!, 'raid failed to start', message.id);
+    return;
+  }
+
+  raidStore.markRaidedOut();
+  console.log(`raid: raid started to ${target.name}, timeouts disabled for this session`);
+  dispatcher.sendMessageAsUser(message.channelId!, 'raided out', message.id);
 }
 
 export async function goodnightkissHandler(
@@ -72,13 +107,7 @@ export async function goodnightkissHandler(
 
   if (
     message.userInfo.userName === config.user ||
-    (await checkCostAddIfEnough(
-      dispatcher,
-      message.channelId!,
-      username,
-      -config.cost,
-      message.id
-    ))
+    (await checkCostAddIfEnough(dispatcher, message.channelId!, username, -config.cost, message.id))
   ) {
     GOODNIGHT_KISS_REDEEMERS.push(username);
     goodnightKissStore.setProperties({
@@ -144,10 +173,7 @@ export async function settitleHandler(
     [config.user],
     () => {
       dispatcher.rawSendMessageAsUser(message.channelId!, `!settitle ${title}`);
-      karmaStore.setKarma(
-        config.karmaModifier * karmaStore.karma,
-        'Set Title karma'
-      );
+      karmaStore.setKarma(config.karmaModifier * karmaStore.karma, 'Set Title karma');
     },
     () => dispatcher.sendMessageAsUser(message.channelId!, 'unfortunate', message.id)
   );

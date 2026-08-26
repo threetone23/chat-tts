@@ -9,7 +9,6 @@ import type { ModelUpdater } from './modelupdater';
 import { LRUCache } from '$lib/LRUcache';
 import { planToTier } from '$lib/twitch';
 import { applyTimeoutTax } from './tax';
-import type { RaidOutMessage } from '$lib/bus/messages';
 import { PUBLIC_TARGET_CHANNEL_ID } from '$env/static/public';
 
 export interface OverlayObserver {
@@ -22,10 +21,6 @@ export interface OverlayTimeoutObserver {
 
 export interface OverlayViewerMilestoneObserver {
   onViewerMilestone(info: ChatViewerMilestoneInfo, notice: UserNotice): void;
-}
-
-export interface OverlayRaidObserver {
-  onRaidOut(info: RaidOutMessage): void;
 }
 
 export interface OverlaySubObserver {
@@ -45,7 +40,6 @@ export class OverlayDispatchers {
   timeoutObservers: OverlayTimeoutObserver[] = [];
   subObservers: OverlaySubObserver[] = [];
   viewerMilestoneObservers: OverlayViewerMilestoneObserver[] = [];
-  raidObservers: OverlayRaidObserver[] = [];
   userCache: LRUCache<HelixUser> = new LRUCache(10);
   private api: ApiClient;
   private botId: string;
@@ -145,25 +139,11 @@ export class OverlayDispatchers {
     }
   }
 
-  addRaidObserver(observer: OverlayRaidObserver) {
-    if (!this.raidObservers.includes(observer)) {
-      this.raidObservers.push(observer);
-      console.debug(`addRaidObserver: ${observer.constructor.name}`);
-    }
-  }
-
   dispatchMessage(message: ChatMessage) {
     console.log(
       `dispatchMessage (fake): "${message.text}" from ${message.userInfo?.userName} -> ${this.observers.length} observer(s)`
     );
     this.onMessage(message);
-  }
-
-  onRaidOut(info: RaidOutMessage) {
-    console.log(`onRaidOut: raided out to ${info.raiderName} (${info.viewers} viewer(s))`);
-    for (const observer of this.raidObservers) {
-      observer.onRaidOut(info);
-    }
   }
 
   private onMessage(message: ChatMessage) {
@@ -302,6 +282,42 @@ export class OverlayDispatchers {
       });
     } catch (e) {
       console.warn(`timeoutUser failed for ${targetUserId}:`, e);
+    }
+  }
+
+  async startRaid(channelId: string, targetUserId: string): Promise<boolean> {
+    if (import.meta.env.DEV) {
+      console.log(`Would have started a raid from ${channelId} to ${targetUserId}.`);
+      return true;
+    }
+
+    try {
+      await this.api.asUser(this.botId, async (ctx) => {
+        await ctx.raids.startRaid(channelId, targetUserId);
+      });
+      console.log(`startRaid: raid started from ${channelId} to ${targetUserId}`);
+      return true;
+    } catch (e) {
+      console.warn(`startRaid failed from ${channelId} to ${targetUserId}:`, e);
+      return false;
+    }
+  }
+
+  async cancelRaid(channelId: string): Promise<boolean> {
+    if (import.meta.env.DEV) {
+      console.log(`Would have canceled the raid in ${channelId}.`);
+      return true;
+    }
+
+    try {
+      await this.api.asUser(this.botId, async (ctx) => {
+        await ctx.raids.cancelRaid(channelId);
+      });
+      console.log(`cancelRaid: raid canceled in ${channelId}`);
+      return true;
+    } catch (e) {
+      console.warn(`cancelRaid failed in ${channelId}:`, e);
+      return false;
     }
   }
 

@@ -421,6 +421,12 @@ export const COMMAND_DEFINITIONS = [
     gateMode: 'overlay'
   }),
   defineCommand({
+    names: ['%raid'],
+    gateMode: 'ungated',
+    requiresArgs: true,
+    help: '%raid <username> | %raid cancel'
+  }),
+  defineCommand({
     names: ['%selfthought'],
     section: section('selfThoughtConfig', 'Self Thought', [
       { key: 'cost', kind: 'number', label: 'Cost', default: 5000, min: 0, step: 1 },

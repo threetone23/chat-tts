@@ -32,7 +32,8 @@ const BOT_SCOPES = [
   'moderator:read:chatters',
   'moderator:manage:banned_users',
   'moderator:manage:chat_messages',
-  'channel:read:subscriptions'
+  'channel:read:subscriptions',
+  'channel:manage:raids'
 ];
 const SCOPES = ACCOUNT === 'broadcaster' ? BROADCASTER_SCOPES : BOT_SCOPES;
 const TOKEN_FILE = join(process.cwd(), `tokens.${ACCOUNT}.json`);
